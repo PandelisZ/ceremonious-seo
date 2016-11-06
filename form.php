@@ -9,8 +9,10 @@
     <p>Please enter your API key as supplied by Majestic. To get an API key create an account at <a href="https://majestic.com/" target="_blank">majestic.com</a></p>
     <table class="form-table">
         <tr valign="top">
-        <th scope="row">API_KEY</th>
+        <th scope="row">Majestic API_KEY</th>
         <td><input type="text" name="MAJESTIC_API_KEY" value="<?php echo esc_attr( get_option('MAJESTIC_API_KEY') ); ?>" /></td>
+        <th scope="row">Clarifai ACCESS_TOKEN</th>
+        <td><input type="text" name="CLARIFAI_ACCESS_TOKEN" value="<?php echo esc_attr( get_option('CLARIFAI_ACCESS_TOKEN') ); ?>" /></td>
         </tr>
     </table>
 

@@ -62,17 +62,18 @@ add_action( 'admin_init', 'my_plugin_settings' );
 function my_plugin_settings() {
   //API key as referenced in the settings page
 	register_setting( 'my-plugin-settings-group', 'MAJESTIC_API_KEY' );
+  register_setting( 'my-plugin-settings-group', 'CLARIFAI_ACCESS_TOKEN' );
 }
 
 function clarifaiGetTags($img){
   $endpoint = 'https://api.clarifai.com/v1/tag/?';
 
   $args = array(
-  'headers' => array('Authorization' => 'Bearer nsAbMwUu9KWZFxj991PMZIirj6Jj9Q'),
+  'headers' => array('Authorization' => 'Bearer ' . get_option('CLARIFAI_ACCESS_TOKEN') ),
   );
 
 
-  $params = array('url'=> $img);
+  $params = array('url'=>$img);
   $query = http_build_query($params);
 
   $clarifai_query = $endpoint . $query;
@@ -170,35 +171,60 @@ add_action( 'add_meta_boxes', 'wpdocs_register_meta_boxes' );
 
 function wpdocs_my_display_callback( $post ) {
 
-  var_export( clarifaiGetTags() );
-
-
   $content_string = $post->post_content;
 
   $content_urls = wp_extract_urls( $content_string );
 
-  var_export($content_urls);
+  $urlsOnly = findUrls($content_urls);
+  $imgOnly = findImgIndex($content_urls);
 
-  var_export(findImgIndex($content_urls));
+  $majesticTagResults = [];
+  $clarifaiTagResults = [];
 
+  foreach ($imgOnly as &$value){
+    $resultArr = majesticRequestGetRefDomains($value);
+    foreach($resultArr as &$cat){
+      array_push($majesticTagResults, $cat);
+    }
+  }
+
+  foreach ($imgOnly as &$value){
+    $resultArr = clarifaiGetTags($value);
+    foreach($resultArr as &$cat){
+      array_push($clarifaiTagResults, $cat);
+    }
+  }
 
     ?>
 
-      <h2> Urls Found: </h2>
+      <h1> External Links Found: </h1>
       <?php
       echo '<ul>';
-      echo '<li>' . implode( '</li><li>', $content_urls) . '</li>';
+      echo '<li>' . implode( '</li><li>', $urlsOnly) . '</li>';
       echo '</ul>';
       ?>
-      <h2>Images Found: </h2>
-      <h2> Using the above information we suggest you use the following tags: </h2>
+      <h1>Images Found: </h1>
 
       <?php
       echo '<ul>';
-      echo '<li>' . implode( '</li><li>', $content_urls) . '</li>';
+      echo '<li>' . implode( '</li><li>', $imgOnly) . '</li>';
       echo '</ul>';
       ?>
+      <h1> Using the above information we suggest you use the following tags: </h1>
 
+      <h2><b>Via Majestic</b></h2>
+        <?php
+        echo '<ul>';
+        echo '<li>' . implode( '</li><li>', $majesticTagResults) . '</li>';
+        echo '</ul>';
+        ?>
+
+      <h2><b>Via Clarifai</b></h2>
+      <?php
+      echo '<ul>';
+      echo '<li>' . implode( '</li><li>', $clarifaiTagResults) . '</li>';
+      echo '</ul>';
+      ?>
 
 
     <?php
