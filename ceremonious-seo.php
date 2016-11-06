@@ -64,10 +64,31 @@ function my_plugin_settings() {
 	register_setting( 'my-plugin-settings-group', 'MAJESTIC_API_KEY' );
 }
 
+function clarifaiGetTags($img){
+  $endpoint = 'https://api.clarifai.com/v1/tag/?';
+
+  $args = array(
+  'headers' => array('Authorization' => 'Bearer nsAbMwUu9KWZFxj991PMZIirj6Jj9Q'),
+  );
+
+
+  $params = array('url'=> $img);
+  $query = http_build_query($params);
+
+  $clarifai_query = $endpoint . $query;
+
+
+  $response = wp_remote_get( $clarifai_query, $args );
+  $api_response = json_decode( wp_remote_retrieve_body( $response ), true );
+
+  return $api_response['results'][0]['result']['tag']['classes'];
+
+}
+
 
 function majesticRequestGetRefDomains($domain ){
   //this function returns the body of the requst as sent from majestic
-
+  $domain = parse_url($domain)['host'];
   $params = array('app_api_key'=> get_option('MAJESTIC_API_KEY'),
                   'cmd'=> 'GetRefDomains',
                   'item0'=>$domain,
@@ -90,7 +111,7 @@ function majesticRequestGetRefDomains($domain ){
 
   $categories = [];
 
-  for ($x = 0; $x <= $data_count; $x++){
+  for ($x = 0; $x < $data_count; $x++){
     $cat = $api_response_dataArr[$x]['TopicalTrustFlow_Topic_0'];
     array_push($categories, $cat);
   }
@@ -99,6 +120,38 @@ function majesticRequestGetRefDomains($domain ){
 
   //return array of categories
   return $categories;
+}
+
+function findImgIndex($arr){
+
+  $arr_length = count($arr);
+
+  $images = [];
+
+  for($x = 0; $x <= $arr_length; $x ++){
+    if (strpos($arr[$x], '.jpg') !== false) {
+      array_push($images, $arr[$x]);
+    }
+  }
+
+  return $images;
+
+}
+
+function findUrls($arr){
+
+  $arr_length = count($arr);
+
+  $images = [];
+
+  for($x = 0; $x <= $arr_length; $x ++){
+    if (strpos($arr[$x], '.jpg') == false) {
+      array_push($images, $arr[$x]);
+    }
+  }
+
+  return $images;
+
 }
 
 
@@ -117,14 +170,37 @@ add_action( 'add_meta_boxes', 'wpdocs_register_meta_boxes' );
 
 function wpdocs_my_display_callback( $post ) {
 
+  var_export( clarifaiGetTags() );
+
+
+  $content_string = $post->post_content;
+
+  $content_urls = wp_extract_urls( $content_string );
+
+  var_export($content_urls);
+
+  var_export(findImgIndex($content_urls));
+
+
     ?>
 
-    <h1>////DEBUG</h1>
+      <h2> Urls Found: </h2>
+      <?php
+      echo '<ul>';
+      echo '<li>' . implode( '</li><li>', $content_urls) . '</li>';
+      echo '</ul>';
+      ?>
+      <h2>Images Found: </h2>
+      <h2> Using the above information we suggest you use the following tags: </h2>
 
-      <?php var_export(majesticRequestGetRefDomains('majestic.com')); ?>
+      <?php
+      echo '<ul>';
+      echo '<li>' . implode( '</li><li>', $content_urls) . '</li>';
+      echo '</ul>';
+      ?>
 
-    <hr></hr>
-      <button class="ceremonious_button_click">Scan for SEO</button>
+
+
     <?php
 
 }
