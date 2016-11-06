@@ -181,7 +181,7 @@ function wpdocs_my_display_callback( $post ) {
   $majesticTagResults = [];
   $clarifaiTagResults = [];
 
-  foreach ($imgOnly as &$value){
+  foreach ($urlsOnly as &$value){
     $resultArr = majesticRequestGetRefDomains($value);
     foreach($resultArr as &$cat){
       array_push($majesticTagResults, $cat);
