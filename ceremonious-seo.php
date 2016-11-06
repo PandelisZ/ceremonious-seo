@@ -239,10 +239,3 @@ function wpdocs_save_meta_box( $post_id ) {
     // Save logic goes here. Don't forget to include nonce checks!
 }
 add_action( 'save_post', 'wpdocs_save_meta_box' );
-
-
-//post editing here
-add_filter('the_content', 'modify_content');
-function modify_content($content) {
-  return $content . 'fuck';
-}
